@@ -79,6 +79,7 @@ public class DisconfCenterStore {
             }
 
         } else {
+            LOGGER.info("file={},content={} has been record!!!",fileName,disconfCenterFile);
             confFileMap.put(fileName, disconfCenterFile);
         }
     }

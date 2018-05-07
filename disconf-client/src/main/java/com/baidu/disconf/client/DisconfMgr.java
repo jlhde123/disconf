@@ -2,6 +2,7 @@ package com.baidu.disconf.client;
 
 import java.util.List;
 
+import com.baidu.disconf.client.scan.inner.statically.impl.StaticScannerNonAnnotationFileMgrImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -171,7 +172,12 @@ public class DisconfMgr implements ApplicationContextAware {
     /**
      * reloadable config file scan, for xml config
      */
-    public synchronized void reloadableScan(String fileName) {
+    public synchronized void reloadableScan(String fileName,boolean loadFirst) {
+        //是否在扫描未见前先加载配置文件
+        if (loadFirst){
+            StaticScannerNonAnnotationFileMgrImpl.scanData2Store(fileName);
+            return;
+        }
 
         if (!isFirstInit) {
             return;
@@ -197,6 +203,14 @@ public class DisconfMgr implements ApplicationContextAware {
                 LOGGER.error(e.toString(), e);
             }
         }
+    }
+
+    public void reloadableScan(String fileName){
+        this.reloadableScan(fileName,false);
+    }
+
+    public void loadFileFisrt(String fileName){
+        this.reloadableScan(fileName,true);
     }
 
     /**

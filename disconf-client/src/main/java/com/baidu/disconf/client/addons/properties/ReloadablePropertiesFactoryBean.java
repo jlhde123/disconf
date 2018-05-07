@@ -14,6 +14,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -36,6 +37,15 @@ public class ReloadablePropertiesFactoryBean extends PropertiesFactoryBean imple
     private Resource[] locations;
     private long[] lastModified;
     private List<IReloadablePropertiesListener> preListeners;
+    //springboot 配置环境
+    private ConfigurableEnvironment environment;
+
+    public ReloadablePropertiesFactoryBean() {
+    }
+
+    public ReloadablePropertiesFactoryBean(ConfigurableEnvironment environment) {
+        this.environment = environment;
+    }
 
     /**
      * 定义资源文件
@@ -64,6 +74,44 @@ public class ReloadablePropertiesFactoryBean extends PropertiesFactoryBean imple
             // register to disconf
             //
             DisconfMgr.getInstance().reloadableScan(realFileName);
+
+            //
+            // only properties will reload
+            //
+            String ext = FilenameUtils.getExtension(filename);
+            if (ext.equals("properties")) {
+
+                PathMatchingResourcePatternResolver pathMatchingResourcePatternResolver =
+                        new PathMatchingResourcePatternResolver();
+                try {
+                    Resource[] resourceList = pathMatchingResourcePatternResolver.getResources(filename);
+                    for (Resource resource : resourceList) {
+                        resources.add(resource);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        this.locations = resources.toArray(new Resource[resources.size()]);
+        lastModified = new long[locations.length];
+        super.setLocations(locations);
+    }
+
+    public void downloadFiles(List<String> fileNames){
+        List<Resource> resources = new ArrayList<Resource>();
+        for (String filename : fileNames) {
+
+            // trim
+            filename = filename.trim();
+
+            String realFileName = getFileName(filename);
+
+            //
+            // register to disconf
+            //
+            DisconfMgr.getInstance().loadFileFisrt(realFileName);
 
             //
             // only properties will reload
